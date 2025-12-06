@@ -7,20 +7,18 @@ elf_inputs = File.open("input.txt").read
 
 grid = elf_inputs_test.split("\n").map{|line| line.split(" ") }
 
-answers = grid.transpose.map do |vertical_line|
-  operator = vertical_line.last
-  vertical_line.slice(1...-1).reduce(vertical_line.first) do |sum, n| 
+def get_answer(line)
+  operator = line.last
+  line.slice(1...-1).reduce(line.first) do |sum, n|
     eval(sum + operator + n).to_s
   end
 end
 
+answers = grid.transpose.map { |line| get_answer(line) }
+
 puts "Solution One = #{answers.map(&:to_i).sum}"
 
 # Solution part two
-
-total = 0
-answers = []
-
 
 grid_two = elf_inputs.split("\n").map{|line| line.split("") }
 new_set = ""
@@ -37,14 +35,7 @@ grid_two.transpose.reverse.each do |line|
 end
 
 last_grid = new_set.split("\n\n").map{ |l| l.split("\n") }
-
-answers = last_grid.map do |equation|
-  operator = equation.last
-
-  answer = equation.slice(1...-1).reduce(equation.first) do |sum, n| 
-    eval(sum + operator + n).to_s
-  end
-end
+answers = last_grid.map { |line| get_answer(line) }
 
 puts "Solution Two = #{answers.map(&:to_i).sum}"
 
