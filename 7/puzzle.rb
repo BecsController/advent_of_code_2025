@@ -1,5 +1,5 @@
 require "pry"
-
+require "set"
 # Solution part one
 
 elf_inputs_test = File.open("test_input.txt").read
@@ -51,8 +51,46 @@ puts "Solution One = #{@split_junctions.count}"
 
 # Solution part two
 
+@starting_points_two = [[0, first_row.index("S")]]
+@paths = []
 
-puts "Solution Two = #{}"
+def next_steps(x, y)
+  new_position = @grid[y + 1][x]
+  next_steps = []
+
+  case new_position
+  when "^"
+    next_steps << [y + 1, x - 1] unless @grid[y + 1][x - 1].nil?
+    next_steps << [y + 1, x + 1 ] unless @grid[y + 1][x + 1].nil?
+  when "."
+    next_steps << [y + 1, x]
+  else
+    puts "Something went wrong"
+  end
+
+  next_steps
+end
+
+def find_a_path(coords, next_point, path_so_far, path_set = Set.new)
+  y, x = coords
+
+  if y == @grid.count - 1
+    path_so_far.push(coords)
+    @paths << path_so_far
+  else
+    next_steps(x, y).each do |next_step|
+      unless path_set.include?(coords)
+        next_possible_path = path_so_far.clone.push(coords)
+        next_possible_set = path_set.dup.add(coords)
+        find_a_path(next_step, next_point, next_possible_path, next_possible_set)
+      end
+    end
+  end
+end
+
+find_a_path([0, first_row.index("S")], [1, first_row.index("S")], [], Set.new)
+
+puts "Solution Two = #{@paths.count}"
 
 
 
