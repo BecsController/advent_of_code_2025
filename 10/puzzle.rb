@@ -59,14 +59,13 @@ combo_count_two = manual.map do |instruction|
   wiring_and_joltage = instruction.scan(wiring_regexp).map{ |w| w.scan(wiring_regexp) }
   button_wiring = wiring_and_joltage[0...-1].map { |a| a.first.split(",")}
   joltage = wiring_and_joltage.last.first.split(",")
-  starting_combination = 0
+  starting_combination = joltage.max.to_i - 1
   correct_joltage = false
   
   while correct_joltage == false
     starting_combination += 1
-    all_combinations = button_wiring.repeated_combination(starting_combination).to_a
-
-    correct_joltage = all_combinations.any? { |combo| correct_joltage_level?(joltage, combo) }
+    correct_joltage = button_wiring.repeated_combination(starting_combination).any? { |combo| correct_joltage_level?(joltage, combo) }
+    puts "#{starting_combination}, #{joltage}"
   end
 
   starting_combination
