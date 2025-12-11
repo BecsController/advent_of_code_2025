@@ -36,40 +36,52 @@ end
 # puts "Solution One = #{find_paths(START)}"
 
 # Solution part two
+
 elf_inputs_test_two = File.open("test_input_two.txt").read
-inputs_two = elf_inputs_test_two.split("\n").map{|l| l.split(":")}
+inputs_two = elf_inputs.split("\n").map{|l| l.split(":")}
 
 START_TWO = "svr"; WAY_OUT_TWO = "out"
 
-DICTIONARY_TWO = inputs.each_with_object({}) do |(key, output), hash|
+DICTIONARY_TWO = inputs_two.each_with_object({}) do |(key, output), hash|
   hash[key] = output.strip.split(" ")
 end
 
-@paths = {}
+# create a compact bit-index for each node so visited sets become integers (bitmasks)
+nodes = (DICTIONARY_TWO.keys | DICTIONARY_TWO.values.flatten).uniq
+@index_map = {}
+nodes.each_with_index { |n, i| @index_map[n] = i }
 
-def find_paths_two(current_position, path_set = Set.new)
-  cache_key = [current_position, path_set.to_a.sort.join(",")]
-  return @paths[cache_key] if @paths.key?(cache_key)
+# precompute required-bit masks (nil-safe)
+@fft_bit = @index_map.key?("fft") ? (1 << @index_map["fft"]) : 0
+@dac_bit = @index_map.key?("dac") ? (1 << @index_map["dac"]) : 0
+
+# memo: per-position hash of mask -> count (avoids expensive composite keys)
+@paths = Hash.new { |h,k| h[k] = {} }
+
+def find_paths_two(current_position, mask = 0)
+  return @paths[current_position][mask] if @paths[current_position].key?(mask)
+
+  if current_position == WAY_OUT_TWO
+    return ((mask & @fft_bit) != 0 && (mask & @dac_bit) != 0) ? 1 : 0
+  end
 
   total = 0
-  if current_position == WAY_OUT_TWO
-    if path_set.include?("fft") && path_set.include?("dac")
-      return 1 
-    else
-      return 0
+  idx = @index_map[current_position]
+  visited = idx && ((mask >> idx) & 1) != 0
+
+  # if not visited, mark visited and explore children
+  unless visited
+    new_mask = idx ? (mask | (1 << idx)) : mask
+    (DICTIONARY_TWO[current_position] || []).each do |next_step|
+      total += find_paths_two(next_step, new_mask)
     end
   end
 
-  DICTIONARY_TWO[current_position].each do |next_step|
-    unless path_set.include?(current_position)
-      next_possible_set = path_set.dup.add(current_position)
-      total += find_paths_two(next_step, next_possible_set)
-    end
-  end
-
-  @paths[cache_key] = total
+  @paths[current_position][mask] = total
   total
 end
 
 puts "Solution Two = #{find_paths_two(START_TWO)}"
+
+
 
